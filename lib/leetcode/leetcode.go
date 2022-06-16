@@ -1,6 +1,7 @@
 package leetcode
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"log"
@@ -52,9 +53,6 @@ func PickAProblem(checked_questions []int) Stat_status_pairs {
 		return problems[i].Difficulty.Level*problems[i].Stat.Total_submitted > problems[j].Difficulty.Level*problems[j].Stat.Total_submitted
 	})
 
-	//s1 := rand.NewSource(time.Now().UnixNano())
-	//r1 := rand.New(s1)
-	//i := r1.Intn(len(problems))
 	i := 0
 	for j := 0; j < len(checked_questions); j++ {
 		if checked_questions[j] == problems[i].Stat.Question_id {
@@ -80,6 +78,33 @@ func getAllProblems() []byte {
 	resp, err := http.Get(URL + "/api/problems/all")
 	if err != nil {
 		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Fatal(resp.Status)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return data
+}
+
+func GetProblemsByGraphQL() []byte {
+	var jsonData = []byte(`{"query":"query { problemsetQuestionList: questionList(categorySlug: \"\" filters: {tags: [\"\"]}) { total: totalNum questions: data { acRate, difficulty freqBar frontendQuestionId: questionFrontendId isFavor paidOnly: isPaidOnly status title titleSlug topicTags { name id slug } hasSolution hasVideoSolution } } }","variables":{}}`)
+	req, err := http.NewRequest("POST", "https://leetcode.com/graphql", bytes.NewBuffer(jsonData))
+	if err != nil {
+		log.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+			panic(err)
 	}
 	defer resp.Body.Close()
 
