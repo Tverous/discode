@@ -3,99 +3,17 @@ package leetcode
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	mapset "github.com/deckarep/golang-set/v2"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
-	"sort"
+	"time"
 )
 
-var (
-	URL string = "https://leetcode.com"
-)
-
-type Problems struct {
-	Problem []Stat_status_pairs `json:"stat_status_pairs"`
-}
-
-type Stat_status_pairs struct {
-	Stat       stat       `json:"stat"`
-	Difficulty difficulty `json:"difficulty"`
-	Piad_only  bool       `json:"paid_only"`
-}
-
-type stat struct {
-	Question_id         int    `json:"question_id"`
-	Question_title      string `json:"question__title"`
-	Question_title_slug string `json:"question__title_slug"`
-	Total_acs           int    `json:"total_acs"`
-	Total_submitted     int    `json:"total_submitted"`
-}
-
-type difficulty struct {
-	Level int `json:"level"`
-	Alias string
-}
-
-func decodeJSON(data []byte) []Stat_status_pairs {
-	p := Problems{}
-
-	if err := json.Unmarshal(data, &p); err != nil {
-		log.Fatal(err)
-	}
-
-	return p.Problem
-}
-
-func PickAProblem(checked_questions []int) Stat_status_pairs {
-	problems := decodeJSON(getAllProblems())
-
-	sort.Slice(problems[:], func(i, j int) bool {
-		return problems[i].Difficulty.Level*problems[i].Stat.Total_submitted > problems[j].Difficulty.Level*problems[j].Stat.Total_submitted
-	})
-
-	i := 0
-	for j := 0; j < len(checked_questions); j++ {
-		if checked_questions[j] == problems[i].Stat.Question_id {
-			//i = r1.Intn(len(problems))
-			i++
-			j = 0
-		}
-	}
-
-	switch problems[i].Difficulty.Level {
-	case 1:
-		problems[i].Difficulty.Alias = "Easy"
-	case 2:
-		problems[i].Difficulty.Alias = "Medium"
-	case 3:
-		problems[i].Difficulty.Alias = "Hard"
-	}
-
-	return problems[i]
-}
-
-func getAllProblems() []byte {
-	resp, err := http.Get(URL + "/api/problems/all")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		log.Fatal(resp.Status)
-	}
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return data
-}
-
-func GetProblemsByGraphQL() []byte {
-	var jsonData = []byte(`{"query":"query { problemsetQuestionList: questionList(categorySlug: \"\" filters: {tags: [\"\"]}) { total: totalNum questions: data { acRate, difficulty freqBar frontendQuestionId: questionFrontendId isFavor paidOnly: isPaidOnly status title titleSlug topicTags { name id slug } hasSolution hasVideoSolution } } }","variables":{}}`)
-	req, err := http.NewRequest("POST", "https://leetcode.com/graphql", bytes.NewBuffer(jsonData))
+func GetProblems(listId string, tags []string) Data {
+	req, err := http.NewRequest("POST", URL+"/graphql/", bytes.NewBuffer(MakeGraphQLQuery(listId, tags)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -104,7 +22,7 @@ func GetProblemsByGraphQL() []byte {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-			panic(err)
+		panic(err)
 	}
 	defer resp.Body.Close()
 
@@ -117,5 +35,43 @@ func GetProblemsByGraphQL() []byte {
 		log.Fatal(err)
 	}
 
-	return data
+	p := GraphQLDataObj{}
+	if err := json.Unmarshal(data, &p); err != nil {
+		log.Fatal(err)
+	}
+
+	return p.Data
+}
+
+func PickOneProblem(difficulty, listId string, tags []string, solvedQuestions mapset.Set[string]) Question {
+	problems := GetProblems(listId, tags)
+
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+	var idx int = r1.Intn(len(problems.ProblemsetQuestionList.Questions))
+	if difficulty != "" {
+		for ; difficulty != problems.ProblemsetQuestionList.Questions[idx].Difficulty || solvedQuestions.Contains(problems.ProblemsetQuestionList.Questions[idx].FrontendQuestionId); idx++ {
+			if idx == len(problems.ProblemsetQuestionList.Questions)-1 {
+				idx = 0
+			}
+		}
+	}
+
+	return problems.ProblemsetQuestionList.Questions[idx]
+}
+
+type Filter struct {
+	listId string
+	tags   []string
+}
+
+func MakeGraphQLQuery(listId string, tags []string) []byte {
+	f := &Filter{
+		listId: listId,
+		tags:   tags,
+	}
+	var queryString = fmt.Sprintf("{\"query\":\"query { problemsetQuestionList: questionList(categorySlug: \\\"\\\" filters: %+v) { total: totalNum questions: data { acRate, difficulty freqBar frontendQuestionId: questionFrontendId isFavor paidOnly: isPaidOnly status title titleSlug topicTags { name id slug } hasSolution hasVideoSolution } } }\",\"variables\":{}}", *f)
+	var query = []byte(queryString)
+
+	return query
 }
