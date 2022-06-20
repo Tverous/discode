@@ -111,7 +111,7 @@ func main() {
 				c++
 			}
 		}
-		if c < 10 {
+		if c >= 10 {
 			p = leetcode.PickOneProblem("Easy", "\\\"\\\"", []string{tag}, solvedQuestions)
 		} else {
 			p = leetcode.PickOneProblem("Medium", "\\\"\\\"", []string{tag}, solvedQuestions)
