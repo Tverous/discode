@@ -90,6 +90,8 @@ func main() {
 			if author.Discriminator == os.Getenv("DISCORD_BOT_ID") {
 				if strings.Split(strings.Split(messages[i].Content, "\n")[1], "#")[0] == "本週 Topic " {
 					tag = "\\\"" + strings.Split(strings.Split(messages[i].Content, "\n")[1], "#")[1] + "\\\""
+					fmt.Println(messages)
+					break
 				}
 			}
 		}
@@ -125,9 +127,10 @@ func main() {
 		"%v/problems/%v",
 		p.Difficulty, p.FrontendQuestionId, p.Title, leetcode.URL, p.TitleSlug)
 
-	if _, err := dg.ChannelMessageSend(os.Getenv("CHANNEL_ID"), msg); err != nil {
-		log.Fatal(err)
-	}
+	fmt.Println(msg)
+	// if _, err := dg.ChannelMessageSend(os.Getenv("CHANNEL_ID"), msg); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	if err := dg.Close(); err != nil {
 		log.Fatal(err)
