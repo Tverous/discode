@@ -90,6 +90,7 @@ func main() {
 			if author.Discriminator == os.Getenv("DISCORD_BOT_ID") {
 				if strings.Split(strings.Split(messages[i].Content, "\n")[1], "#")[0] == "本週 Topic " {
 					tag = "\\\"" + strings.Split(strings.Split(messages[i].Content, "\n")[1], "#")[1] + "\\\""
+					break
 				}
 			}
 		}
