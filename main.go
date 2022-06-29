@@ -3,14 +3,15 @@ package main
 import (
 	"discode/lib/leetcode"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	mapset "github.com/deckarep/golang-set/v2"
-	"github.com/joho/godotenv"
 	"log"
 	"math/rand"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
+	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -85,7 +86,7 @@ func main() {
 		prefix_msg = fmt.Sprintf("Hi @everyone \n"+
 			"本週 Topic #%v\n", tagSlice[idx])
 	} else {
-		for i := len(messages) - 1; i > 0; i-- {
+		for i := 0; i < len(messages); i++ {
 			author := messages[i].Author
 			if author.Discriminator == os.Getenv("DISCORD_BOT_ID") {
 				if strings.Split(strings.Split(messages[i].Content, "\n")[1], "#")[0] == "本週 Topic " {
