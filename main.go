@@ -101,33 +101,66 @@ func main() {
 
 	fmt.Println(tag)
 	var p leetcode.Question
-	if int(time.Now().Weekday()) == 7 {
-		p = leetcode.PickOneProblem("Hard", "\\\"\\\"", []string{tag}, solvedQuestions)
-	} else if int(time.Now().Weekday()) <= 6 && int(time.Now().Weekday()) >= 2 {
-		p = leetcode.PickOneProblem("Medium", "\\\"\\\"", []string{tag}, solvedQuestions)
-	} else {
-		allProblems := leetcode.GetProblems("\\\"\\\"", []string{"\\\"\\\""})
-		c := 0
-		for i := 0; i < len(allProblems.ProblemsetQuestionList.Questions); i++ {
-			if "Easy" == allProblems.ProblemsetQuestionList.Questions[i].Difficulty && !solvedQuestions.Contains(allProblems.ProblemsetQuestionList.Questions[i].FrontendQuestionId) {
-				c++
+	allProblems := leetcode.GetProblems("\\\"\\\"", []string{tag})
+	numOfEasy := 0
+	numOfMedium := 0
+	numOfHard := 0
+	for i := 0; i < len(allProblems.ProblemsetQuestionList.Questions); i++ {
+		if !solvedQuestions.Contains(allProblems.ProblemsetQuestionList.Questions[i].FrontendQuestionId) {
+			if "Easy" == allProblems.ProblemsetQuestionList.Questions[i].Difficulty {
+				numOfEasy++
+			} else if "Medium" == allProblems.ProblemsetQuestionList.Questions[i].Difficulty {
+				numOfMedium++
+			} else if "Hard" == allProblems.ProblemsetQuestionList.Questions[i].Difficulty {
+				numOfHard++
 			}
 		}
-		if c >= 10 {
-			p = leetcode.PickOneProblem("Easy", "\\\"\\\"", []string{tag}, solvedQuestions)
-		} else {
-			p = leetcode.PickOneProblem("Medium", "\\\"\\\"", []string{tag}, solvedQuestions)
-		}
+	}
+	fmt.Println(numOfEasy, numOfMedium, numOfHard)
+
+	if numOfHard >= numOfMedium && numOfHard >= numOfEasy {
+		p = leetcode.PickOneProblem("Hard", "\\\"\\\"", []string{tag}, solvedQuestions)
+	} else if numOfMedium >= numOfHard && numOfMedium >= numOfEasy {
+		p = leetcode.PickOneProblem("Medium", "\\\"\\\"", []string{tag}, solvedQuestions)
+	} else {
+		p = leetcode.PickOneProblem("Easy", "\\\"\\\"", []string{tag}, solvedQuestions)
 	}
 	fmt.Println(p)
 
 	msg := fmt.Sprintf(prefix_msg+
 		"#A Leetcode A Day, %v \n"+
-		"%v. %v\n"+
-		"%v/problems/%v",
-		p.Difficulty, p.FrontendQuestionId, p.Title, leetcode.URL, p.TitleSlug)
+		"%v. %v\n",
+		p.Difficulty, p.FrontendQuestionId, p.Title)
 
-	if _, err := dg.ChannelMessageSend(os.Getenv("CHANNEL_ID"), msg); err != nil {
+	var embedMsg discordgo.MessageEmbed
+	embedMsg.URL = leetcode.URL
+	embedMsg.Type = discordgo.EmbedTypeRich
+	embedMsg.Title = p.FrontendQuestionId + ". " + p.Title
+	embedMsg.Fields = append(embedMsg.Fields, &discordgo.MessageEmbedField{
+		"Difficulty",
+		p.Difficulty,
+		true,
+	})
+	embedMsg.Fields = append(embedMsg.Fields, &discordgo.MessageEmbedField{
+		"Acceptance Rate",
+		fmt.Sprintf("%.2f%%", p.AcRate),
+		true,
+	})
+	embedMsg.Fields = append(embedMsg.Fields, &discordgo.MessageEmbedField{
+		"Has Solution/Is Paid",
+		fmt.Sprintf("%v/%v", p.HasSolution, p.IsPaid),
+		true,
+	})
+	embedMsg.Fields = append(embedMsg.Fields, &discordgo.MessageEmbedField{
+		"Topics",
+		p.TopicsStr,
+		false,
+	})
+
+	if _, err := dg.ChannelMessageSendComplex(os.Getenv("CHANNEL_ID"), &discordgo.MessageSend{
+		Content: msg,
+		Embed:   &embedMsg,
+	}); err != nil {
 		log.Fatal(err)
 	}
 

@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -56,6 +57,12 @@ func PickOneProblem(difficulty, listId string, tags []string, solvedQuestions ma
 			}
 		}
 	}
+
+	var elems []string
+	for i := 0; i < len(problems.ProblemsetQuestionList.Questions[idx].TopicTags); i++ {
+		elems = append(elems, problems.ProblemsetQuestionList.Questions[idx].TopicTags[i].Slug)
+	}
+	problems.ProblemsetQuestionList.Questions[idx].TopicsStr = strings.Join(elems, ",")
 
 	return problems.ProblemsetQuestionList.Questions[idx]
 }

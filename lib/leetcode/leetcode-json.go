@@ -33,7 +33,10 @@ type Question struct {
 	TitleSlug          string     `json:"titleSlug"`
 	Difficulty         string     `json:"difficulty"`
 	FrontendQuestionId string     `json:"frontendQuestionId"`
+	HasSolution        bool       `json:"hasSolution"`
+	IsPaid             bool       `json:"paidOnly"`
 	TopicTags          []TopicTag `json:"topicTags"`
+	TopicsStr          string
 }
 
 type TopicTag struct {
