@@ -133,7 +133,7 @@ func main() {
 		p.Difficulty, p.FrontendQuestionId, p.Title)
 
 	var embedMsg discordgo.MessageEmbed
-	embedMsg.URL = leetcode.URL
+	embedMsg.URL = leetcode.URL + "/problems/" + p.TitleSlug
 	embedMsg.Type = discordgo.EmbedTypeRich
 	embedMsg.Title = p.FrontendQuestionId + ". " + p.Title
 	embedMsg.Fields = append(embedMsg.Fields, &discordgo.MessageEmbedField{
