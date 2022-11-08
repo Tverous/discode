@@ -84,7 +84,7 @@ func main() {
 
 		tag = "\\\"" + tagSlice[idx] + "\\\""
 		prefix_msg = fmt.Sprintf("Hi @everyone \n"+
-			"本週 Topic #%v\n", tagSlice[idx])
+					 "This week's topic: #%v\n", tagSlice[idx])
 	} else {
 		for i := 0; i < len(messages); i++ {
 			author := messages[i].Author
