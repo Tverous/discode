@@ -84,12 +84,12 @@ func main() {
 
 		tag = "\\\"" + tagSlice[idx] + "\\\""
 		prefix_msg = fmt.Sprintf("Hi @everyone \n"+
-					 "This week's topic: #%v\n", tagSlice[idx])
+			"This week's topic: #%v\n", tagSlice[idx])
 	} else {
 		for i := 0; i < len(messages); i++ {
 			author := messages[i].Author
 			if author.Discriminator == os.Getenv("DISCORD_BOT_ID") {
-				if strings.Split(strings.Split(messages[i].Content, "\n")[1], "#")[0] == "本週 Topic " {
+				if strings.Split(strings.Split(messages[i].Content, "\n")[1], "#")[0] == "This week's topic: " {
 					tag = "\\\"" + strings.Split(strings.Split(messages[i].Content, "\n")[1], "#")[1] + "\\\""
 					break
 				}
